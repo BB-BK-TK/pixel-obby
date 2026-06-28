@@ -1,5 +1,7 @@
 # Pixel Obby
 
+**▶ Play online: https://bb-bk-tk.github.io/pixel-obby/**
+
 An endless obby (obstacle course) game. Every obby is harder than the one before — and there are millions of them, because each one is generated from its level number.
 
 ## How to play
