@@ -1,6 +1,8 @@
 # Pixel Obby
 
-**▶ Play online: https://bb-bk-tk.github.io/pixel-obby/**
+**▶ Play online: https://pixel-obby.is-a.dev** &nbsp; (also at https://bb-bk-tk.github.io/pixel-obby/)
+
+> The `pixel-obby.is-a.dev` custom domain goes live once the [is-a.dev registration PR](https://github.com/is-a-dev/register/pull/42070) is merged. Until then, use the github.io link above.
 
 An endless obby (obstacle course) game. Every obby is harder than the one before — and there are millions of them, because each one is generated from its level number.
 
