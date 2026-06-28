@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>OBBYVERSE — Endless Obbies</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- ============ MAIN MENU ============ -->
+  <div id="screen-menu" class="screen active">
+    <div class="menu-bg"></div>
+    <div class="menu-content">
+      <h1 class="logo">OBBY<span>VERSE</span></h1>
+      <p class="tagline">Millions of obbies. Each one harder than the last.</p>
+      <div class="menu-stats">
+        <div class="stat-chip">⭐ <span id="menu-xp">0</span> XP</div>
+        <div class="stat-chip">🏁 Obby <span id="menu-level">1</span></div>
+      </div>
+      <button id="btn-play" class="big-btn play">▶ PLAY</button>
+      <button id="btn-market" class="big-btn market">🛒 MARKET</button>
+      <p class="hint">Move with ◀ ▶ buttons or A/D · Jump with ⬆ or Space</p>
+    </div>
+  </div>
+
+  <!-- ============ MARKET ============ -->
+  <div id="screen-market" class="screen">
+    <div class="market-header">
+      <button id="btn-market-back" class="icon-btn">←</button>
+      <h2>🛒 MARKET</h2>
+      <div class="stat-chip">⭐ <span id="market-xp">0</span> XP</div>
+    </div>
+    <div id="market-grid" class="market-grid"></div>
+  </div>
+
+  <!-- ============ GAME ============ -->
+  <div id="screen-game" class="screen">
+    <canvas id="canvas"></canvas>
+
+    <div class="hud">
+      <div class="hud-left">
+        <div class="stat-chip">🏁 Obby <span id="hud-level">1</span></div>
+        <div class="stat-chip">⭐ <span id="hud-xp">0</span></div>
+        <div class="stat-chip">💀 <span id="hud-deaths">0</span></div>
+      </div>
+      <button id="btn-pause" class="icon-btn">⏸</button>
+    </div>
+
+    <!-- touch controls -->
+    <div class="controls">
+      <div class="dpad">
+        <button id="btn-left" class="ctrl-btn">◀</button>
+        <button id="btn-right" class="ctrl-btn">▶</button>
+      </div>
+      <button id="btn-jump" class="ctrl-btn jump">⬆<small>JUMP</small></button>
+    </div>
+
+    <!-- pause overlay -->
+    <div id="overlay-pause" class="overlay">
+      <div class="overlay-card">
+        <h2>⏸ PAUSED</h2>
+        <button id="btn-resume" class="big-btn play">▶ RESUME</button>
+        <button id="btn-restart" class="big-btn">🔄 RESTART OBBY</button>
+        <button id="btn-quit" class="big-btn danger">🏠 MENU</button>
+      </div>
+    </div>
+
+    <!-- level complete overlay -->
+    <div id="overlay-win" class="overlay">
+      <div class="overlay-card win">
+        <h2>🎉 OBBY <span id="win-level"></span> COMPLETE!</h2>
+        <div class="xp-pop">+100 XP</div>
+        <p id="win-stats"></p>
+        <button id="btn-next" class="big-btn play">NEXT OBBY ▶</button>
+        <button id="btn-win-menu" class="big-btn">🏠 MENU</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="game.js"></script>
+</body>
+</html>

@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#0b0b1a">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Pixel Obby</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="game-wrap">
+  <div id="rotate-hint">&#8635; Rotate your phone sideways for the best view!</div>
+  <canvas id="game" width="960" height="540"></canvas>
+
+  <!-- In-game HUD -->
+  <div id="hud" class="hidden">
+    <div id="hud-level">OBBY #1</div>
+    <div id="hud-xp">XP 0</div>
+    <div id="hud-buttons">
+      <button id="btn-hud-levels" class="small-btn">OBBIES</button>
+      <button id="btn-pause" class="small-btn">MENU</button>
+    </div>
+  </div>
+
+  <!-- Touch controls -->
+  <div id="touch-controls" class="hidden">
+    <div id="move-buttons">
+      <button id="btn-left" class="touch-btn">&#9664;</button>
+      <button id="btn-right" class="touch-btn">&#9654;</button>
+    </div>
+    <button id="btn-jump" class="touch-btn jump">JUMP</button>
+  </div>
+
+  <!-- Main menu -->
+  <div id="menu" class="overlay">
+    <h1 class="title">PIXEL OBBY</h1>
+    <p class="subtitle">Millions of obbies. Each one harder than the last.</p>
+    <div class="menu-stats">
+      <span id="menu-level">Obby #1</span>
+      <span id="menu-xp">XP 0</span>
+    </div>
+    <button id="btn-play" class="big-btn">PLAY</button>
+    <button id="btn-levels" class="big-btn alt">MY OBBIES</button>
+    <button id="btn-market" class="big-btn alt">MARKET</button>
+    <button id="btn-howto" class="big-btn alt">HOW TO PLAY</button>
+  </div>
+
+  <!-- Level select -->
+  <div id="levels" class="overlay hidden">
+    <h1 class="title small">MY OBBIES</h1>
+    <p class="subtitle">Replay any obby you reached &mdash; replays earn +25 XP</p>
+    <div id="level-grid"></div>
+    <button id="btn-levels-back" class="big-btn alt">BACK</button>
+  </div>
+
+  <!-- Tutorial -->
+  <div id="tutorial" class="overlay hidden">
+    <h1 class="title small">HOW TO PLAY</h1>
+    <div class="tut-list">
+      <p><span class="tut-key">&#9664; &#9654;</span> Move with the on-screen buttons, <b>A / D</b> or the <b>arrow keys</b></p>
+      <p><span class="tut-key">JUMP</span> Jump with the button, <b>SPACE</b>, <b>W</b> or <b>&#9650;</b></p>
+      <p><span class="tut-key">&#9873;</span> Reach the <b>red flag</b> at the end to finish the obby and earn <b>+100 XP</b></p>
+      <p><span class="tut-key">&#10004;</span> <b>Red platforms</b> are checkpoints &mdash; they turn <b>green</b> when you touch them, and falling sends you back to the last green one</p>
+      <p><span class="tut-key">&#9888;</span> Avoid <b>spikes</b>, <b>moving platforms</b> and glowing <b>lava blocks</b> in later obbies &mdash; lava burns on touch!</p>
+      <p><span class="tut-key">&#9733;</span> Spend XP on <b>avatars</b> and <b>items</b> in the <b>MARKET</b></p>
+      <p><span class="tut-key">&#9889;</span> Buy <b>items</b> in the market and <b>wear</b> them &mdash; they stay on until you change!</p>
+    </div>
+    <button id="btn-tutorial-ok" class="big-btn">GOT IT!</button>
+  </div>
+
+  <!-- Market -->
+  <div id="market" class="overlay hidden">
+    <h1 class="title small">MARKET</h1>
+    <div class="menu-stats"><span id="market-xp">XP 0</span></div>
+    <div id="market-tabs">
+      <button id="tab-skins" class="market-tab active">AVATARS</button>
+      <button id="tab-items" class="market-tab">ITEMS</button>
+    </div>
+    <div id="skin-grid"></div>
+    <div id="item-grid" class="hidden"></div>
+    <button id="btn-market-back" class="big-btn alt">BACK</button>
+  </div>
+
+  <!-- Level complete -->
+  <div id="complete" class="overlay hidden">
+    <h1 class="title small">OBBY COMPLETE!</h1>
+    <p class="reward" id="complete-reward">+100 XP</p>
+    <p class="subtitle" id="complete-next">Obby #2 is waiting... it's a bit harder!</p>
+    <button id="btn-next" class="big-btn">NEXT OBBY</button>
+    <button id="btn-complete-levels" class="big-btn alt">MY OBBIES</button>
+    <button id="btn-complete-market" class="big-btn alt">MARKET</button>
+    <button id="btn-complete-menu" class="big-btn alt">MENU</button>
+  </div>
+</div>
+
+<script src="game.js"></script>
+</body>
+</html>
