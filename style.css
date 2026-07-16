@@ -386,3 +386,69 @@ canvas#game {
   cursor: default;
   border-color: #555;
 }
+
+/* ---------- Optional account / cloud sync ---------- */
+.cloud-status {
+  color: #9aa7b8;
+  font-size: clamp(11px, 1.8vw, 14px);
+  line-height: 1.5;
+}
+
+.account-card {
+  width: min(92vw, 620px);
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 12px;
+  padding: 20px;
+  background: #1f1f38;
+  border: 3px solid #4a4a7a;
+}
+
+.account-card label,
+.account-user {
+  color: #fff;
+  font-weight: bold;
+  font-size: clamp(13px, 2vw, 17px);
+  text-align: left;
+}
+
+#account-email {
+  width: 100%;
+  padding: 12px 14px;
+  border: 3px solid #4a4a7a;
+  background: #0b0b1a;
+  color: #fff;
+  font: inherit;
+  font-size: 16px;
+  user-select: text;
+}
+
+.merge-choice {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+  border: 3px solid #ffd84d;
+  background: #2d2d4d;
+  color: #fff;
+  line-height: 1.5;
+}
+
+.account-message {
+  min-height: 22px;
+  max-width: min(92vw, 620px);
+  color: #ffd84d;
+  font-size: clamp(12px, 2vw, 15px);
+  line-height: 1.5;
+}
+
+.danger-btn {
+  font: inherit;
+  font-weight: bold;
+  color: #ffb4b4;
+  background: #3d1f2a;
+  border: 3px solid #8b2525;
+  padding: 10px 16px;
+  cursor: pointer;
+}
