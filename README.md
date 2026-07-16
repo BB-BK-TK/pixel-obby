@@ -17,7 +17,7 @@ Just open `index.html` in any browser (double-click it). No install needed.
    installs like a real app with its own icon, runs fullscreen, and even
    works offline afterwards
 
-Your phone and PC each keep their own save (XP and skins).
+Guest mode keeps a save on each device. Optional email magic-link sign-in can sync progress and obby history across devices after the Supabase migration has been applied.
 
 - **Move**: A / D or the arrow keys, or the on-screen ◀ ▶ buttons
 - **Jump**: SPACE, W, ↑, or the on-screen JUMP button
@@ -34,8 +34,19 @@ Your phone and PC each keep their own save (XP and skins).
 - You start as a plain pixel — open the **Market** to buy new skins with your XP
 - Your XP, level and skins are saved automatically in your browser
 
+## Optional cloud save
+
+1. Run `supabase-migration.sql` once in the Supabase SQL editor.
+2. In Supabase Authentication URL Configuration, add `https://bb-bk-tk.github.io/pixel-obby/` as an allowed redirect URL.
+3. Open **SAVE ONLINE** in the game and request a magic link with a parent-managed email.
+4. On first sign-in, explicitly choose the device save or cloud save. Guest play remains available without an account.
+
+Cloud data is limited to game progress and obby run history. The account screen supports JSON export and account/cloud-data deletion. Never place a Supabase service-role key in this repository.
+
 ## Files
 
 - `index.html` — the page, menus and buttons
 - `style.css` — how everything looks
 - `game.js` — the game itself (physics, level generator, market, saving)
+- `cloud-sync.js` — optional email sign-in, cloud progress sync, history export, and deletion
+- `supabase-migration.sql` — tables, row-level security policies, and self-delete RPC
