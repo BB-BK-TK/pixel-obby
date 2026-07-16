@@ -1,12 +1,13 @@
 // Service worker: lets Pixel Obby install as an app and work offline.
 "use strict";
 
-const CACHE = "pixel-obby-v1";
+const CACHE = "pixel-obby-v2";
 const FILES = [
   "./",
   "./index.html",
   "./style.css",
   "./game.js",
+  "./cloud-sync.js",
   "./manifest.webmanifest",
   "./icon-192.png",
   "./icon-512.png",

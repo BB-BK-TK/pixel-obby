@@ -59,6 +59,8 @@ function playQuack() {
 /* ---------------- Save data ---------------- */
 
 const SAVE_KEY = "pixelObbySave";
+let runStartedAt = Date.now();
+let runAttempts = 1;
 
 let save = {
   xp: 0,
@@ -103,6 +105,7 @@ function writeSave() {
   try {
     localStorage.setItem(SAVE_KEY, JSON.stringify(save));
   } catch (e) { /* storage unavailable -> play without saving */ }
+  window.PixelObbyCloud?.queueProgress?.(save);
 }
 
 /* ---------------- Skins ---------------- */
@@ -1527,10 +1530,13 @@ function respawn() {
 }
 
 function hurtPlayer() {
+  runAttempts += 1;
   respawn();
 }
 
 function loadLevel(n) {
+  runStartedAt = Date.now();
+  runAttempts = 1;
   world = generateLevel(n);
   particles = [];
   respawn();
@@ -1654,7 +1660,7 @@ function updatePlayer(dt) {
 
 /* ---------------- Game flow ---------------- */
 
-let state = "menu"; // menu | playing | market | complete | tutorial | levels
+let state = "menu"; // menu | playing | market | complete | tutorial | levels | account
 let marketReturn = "menu";
 let levelsReturn = "menu";
 let startAfterTutorial = false;
@@ -1662,9 +1668,19 @@ let startAfterTutorial = false;
 function completeObby() {
   const replay = world.n < save.level;
   const reward = replay ? 25 : XP_PER_OBBY;
+  const completedRun = {
+    obbyNumber: world.n,
+    durationMs: Math.max(0, Date.now() - runStartedAt),
+    attempts: runAttempts,
+    xpEarned: reward,
+    replay,
+    skin: save.skin,
+    equipped: { ...save.equipped },
+  };
   save.xp += reward;
   if (!replay) save.level += 1;
   writeSave();
+  window.PixelObbyCloud?.recordRun?.(completedRun);
   refreshXpLabels();
   document.getElementById("complete-reward").textContent =
     "+" + reward + " XP" + (replay ? " (replay)" : "");
@@ -1681,6 +1697,7 @@ function setState(s) {
   document.getElementById("complete").classList.toggle("hidden", s !== "complete");
   document.getElementById("tutorial").classList.toggle("hidden", s !== "tutorial");
   document.getElementById("levels").classList.toggle("hidden", s !== "levels");
+  document.getElementById("account").classList.toggle("hidden", s !== "account");
   document.getElementById("hud").classList.toggle("hidden", s !== "playing");
   document.getElementById("touch-controls").classList.toggle("hidden", s !== "playing");
   if (s === "market") { marketTab = "skins"; showMarketTab(); }
@@ -1907,6 +1924,8 @@ document.getElementById("btn-play").onclick = () => {
   }
 };
 document.getElementById("btn-howto").onclick = () => { startAfterTutorial = false; setState("tutorial"); };
+document.getElementById("btn-account").onclick = () => setState("account");
+document.getElementById("btn-account-back").onclick = () => setState("menu");
 document.getElementById("btn-tutorial-ok").onclick = () => {
   save.seenTutorial = true;
   writeSave();
@@ -2176,12 +2195,36 @@ function frame(now) {
   requestAnimationFrame(frame);
 }
 
+/* ---------------- Local/cloud save bridge ---------------- */
+
+window.PixelObbyGame = {
+  getSave() {
+    return JSON.parse(JSON.stringify(save));
+  },
+  replaceSave(incoming) {
+    if (!incoming || typeof incoming !== "object") return;
+    save.xp = Number.isFinite(incoming.xp) ? Math.max(0, incoming.xp) : 0;
+    save.level = Number.isFinite(incoming.level) ? Math.max(1, incoming.level) : 1;
+    save.owned = Array.isArray(incoming.owned) && incoming.owned.length ? incoming.owned : ["classic"];
+    save.skin = typeof incoming.skin === "string" ? incoming.skin : "classic";
+    save.seenTutorial = !!incoming.seenTutorial;
+    save.ownedItems = Array.isArray(incoming.ownedItems) ? incoming.ownedItems : [];
+    save.equipped = incoming.equipped && typeof incoming.equipped === "object"
+      ? incoming.equipped
+      : { hat: null, back: null, feet: null, charm: null };
+    writeSave();
+    loadLevel(save.level);
+    setState("menu");
+  },
+};
+
 /* ---------------- Boot ---------------- */
 
 loadSave();
 loadLevel(save.level);
 setState("menu");
 requestAnimationFrame(frame);
+window.PixelObbyCloud?.init?.();
 
 // installable app + offline play (only works when served over http, not file://)
 if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {

@@ -49,6 +49,40 @@
     <button id="btn-levels" class="big-btn alt">MY OBBIES</button>
     <button id="btn-market" class="big-btn alt">MARKET</button>
     <button id="btn-howto" class="big-btn alt">HOW TO PLAY</button>
+    <button id="btn-account" class="big-btn alt">SAVE ONLINE</button>
+    <p id="menu-cloud-status" class="cloud-status">Guest mode · saved on this device</p>
+  </div>
+
+  <!-- Optional account and cloud history -->
+  <div id="account" class="overlay hidden">
+    <h1 class="title small">SAVE ONLINE</h1>
+    <p class="subtitle">Playing as a guest always works. Sign in only if you want progress on more than one device.</p>
+
+    <div id="account-signed-out" class="account-card">
+      <label for="account-email">Parent-managed email</label>
+      <input id="account-email" type="email" autocomplete="email" inputmode="email" placeholder="you@example.com">
+      <button id="btn-magic-link" class="big-btn">EMAIL ME A SIGN-IN LINK</button>
+      <p class="hint">No password. We only store game progress and obby history.</p>
+    </div>
+
+    <div id="account-signed-in" class="account-card hidden">
+      <p id="account-user" class="account-user"></p>
+      <p id="account-sync-status" class="cloud-status"></p>
+
+      <div id="merge-choice" class="merge-choice hidden">
+        <p><b>Progress exists in both places.</b><br>Choose which save should become current.</p>
+        <button id="btn-use-device" class="big-btn">USE THIS DEVICE</button>
+        <button id="btn-use-cloud" class="big-btn alt">USE CLOUD SAVE</button>
+      </div>
+
+      <button id="btn-sync-now" class="big-btn">SYNC NOW</button>
+      <button id="btn-export-history" class="big-btn alt">EXPORT MY HISTORY</button>
+      <button id="btn-sign-out" class="big-btn alt">SIGN OUT</button>
+      <button id="btn-delete-account" class="danger-btn">DELETE ACCOUNT &amp; CLOUD DATA</button>
+    </div>
+
+    <p id="account-message" class="account-message" aria-live="polite"></p>
+    <button id="btn-account-back" class="big-btn alt">BACK</button>
   </div>
 
   <!-- Level select -->
@@ -99,6 +133,8 @@
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="cloud-sync.js"></script>
 <script src="game.js"></script>
 </body>
 </html>
