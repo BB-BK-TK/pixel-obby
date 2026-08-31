@@ -5,6 +5,7 @@ on:
   push:
     branches:
       - play-store-prep
+      - fix-twa-crash-v2
     paths:
       - 'android/**'
       - '.github/workflows/android-build.yml'
