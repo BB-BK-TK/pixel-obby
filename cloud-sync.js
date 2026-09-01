@@ -261,24 +261,6 @@
     if (error) message("Run history will retry next time: " + error.message, true);
   }
 
-  async function exportHistory() {
-    const [{ data: progress, error: progressError }, { data: runs, error: runsError }] = await Promise.all([
-      client.from("game_progress").select("save_data, updated_at").eq("user_id", session.user.id).maybeSingle(),
-      client.from("obby_runs").select("obby_number, completed_at, duration_ms, attempts, xp_earned, replay, skin, equipped").eq("user_id", session.user.id).order("completed_at", { ascending: true }),
-    ]);
-    if (progressError) throw progressError;
-    if (runsError) throw runsError;
-
-    const blob = new Blob([JSON.stringify({ exportedAt: new Date().toISOString(), progress, runs }, null, 2)], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = "pixel-obby-history.json";
-    link.click();
-    URL.revokeObjectURL(url);
-    message("History exported.");
-  }
-
   async function deleteAccount() {
     const confirmed = window.confirm("Delete this account and all Pixel Obby cloud data? Local progress on this device will stay.");
     if (!confirmed) return;
@@ -307,7 +289,6 @@
     $("btn-use-device").onclick = () => chooseDevice().catch((error) => message(error.message, true));
     $("btn-use-cloud").onclick = () => chooseCloud().catch((error) => message(error.message, true));
     $("btn-sync-now").onclick = () => saveProgress(localSave()).catch((error) => message(error.message, true));
-    $("btn-export-history").onclick = () => exportHistory().catch((error) => message(error.message, true));
     $("btn-sign-out").onclick = () => client.auth.signOut().catch((error) => message(error.message, true));
     $("btn-delete-account").onclick = () => deleteAccount().catch((error) => message(error.message, true));
 
