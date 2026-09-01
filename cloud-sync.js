@@ -1,10 +1,11 @@
 "use strict";
 
 /*
-  Pixel Obby optional cloud save.
+  Pixel Obby optional cloud save + anonymous product analytics.
   - Guest play and localStorage always work.
   - Sign-in uses a parent-managed email magic link.
-  - Only game progress and obby history are stored.
+  - Only game progress and obby history are stored for signed-in cloud save.
+  - Product analytics uses a random device/browser ID and session ID; it does not require an account or email.
   - This file contains a public publishable key, never a service-role key.
 */
 
@@ -12,12 +13,18 @@
   const SUPABASE_URL = "https://kwsrktcsthksnvgbquup.supabase.co";
   const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_Qx-QIsbRqz1hcJebGzPgIw_PtePCnWl";
   const SYNC_KEY = "pixelObbyCloudSync";
+  const ANALYTICS_VISITOR_KEY = "pixelObbyAnalyticsVisitor";
+  const ANALYTICS_SESSION_KEY = "pixelObbyAnalyticsSession";
+  const ANALYTICS_EVENTS = new Set(["page_view", "game_start", "obby_complete"]);
 
   let client = null;
   let session = null;
   let cloudProgress = null;
   let syncEnabled = false;
   let saveTimer = null;
+  let analyticsQueue = [];
+  let fallbackVisitorId = null;
+  let fallbackSessionId = null;
 
   const $ = (id) => document.getElementById(id);
   const message = (text, isError = false) => {
@@ -26,6 +33,81 @@
     el.textContent = text || "";
     el.style.color = isError ? "#ff8f8f" : "#ffd84d";
   };
+
+  function randomId() {
+    if (window.crypto?.randomUUID) return window.crypto.randomUUID();
+    return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (ch) => {
+      const r = Math.random() * 16 | 0;
+      const v = ch === "x" ? r : (r & 0x3 | 0x8);
+      return v.toString(16);
+    });
+  }
+
+  function analyticsVisitorId() {
+    try {
+      let id = localStorage.getItem(ANALYTICS_VISITOR_KEY);
+      if (!id) {
+        id = randomId();
+        localStorage.setItem(ANALYTICS_VISITOR_KEY, id);
+      }
+      return id;
+    } catch {
+      fallbackVisitorId ||= randomId();
+      return fallbackVisitorId;
+    }
+  }
+
+  function analyticsSessionId() {
+    try {
+      let id = sessionStorage.getItem(ANALYTICS_SESSION_KEY);
+      if (!id) {
+        id = randomId();
+        sessionStorage.setItem(ANALYTICS_SESSION_KEY, id);
+      }
+      return id;
+    } catch {
+      fallbackSessionId ||= randomId();
+      return fallbackSessionId;
+    }
+  }
+
+  function displayMode() {
+    if (window.matchMedia?.("(display-mode: standalone)")?.matches) return "standalone";
+    if (document.referrer?.startsWith("android-app://")) return "twa";
+    return "browser";
+  }
+
+  async function sendAnalytics(payload) {
+    if (!client) {
+      analyticsQueue.push(payload);
+      return;
+    }
+    const { error } = await client.from("analytics_events").insert(payload);
+    if (error) console.debug("Pixel Obby analytics skipped:", error.message);
+  }
+
+  function track(eventName, details = {}) {
+    if (!ANALYTICS_EVENTS.has(eventName)) return;
+    const obby = Number(details.obbyNumber);
+    const payload = {
+      visitor_id: analyticsVisitorId(),
+      session_id: analyticsSessionId(),
+      event_name: eventName,
+      obby_number: Number.isFinite(obby) && obby > 0 ? Math.floor(obby) : null,
+      metadata: {
+        mode: displayMode(),
+        ...(typeof details.replay === "boolean" ? { replay: details.replay } : {}),
+      },
+    };
+    sendAnalytics(payload).catch(() => {});
+  }
+
+  function flushAnalyticsQueue() {
+    if (!client || !analyticsQueue.length) return;
+    const queued = analyticsQueue;
+    analyticsQueue = [];
+    queued.forEach((payload) => sendAnalytics(payload).catch(() => {}));
+  }
 
   function localGame() {
     return window.PixelObbyGame || null;
@@ -218,6 +300,9 @@
       auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true },
     });
 
+    flushAnalyticsQueue();
+    track("page_view");
+
     $("btn-magic-link").onclick = () => sendMagicLink().catch((error) => message(error.message, true));
     $("btn-use-device").onclick = () => chooseDevice().catch((error) => message(error.message, true));
     $("btn-use-cloud").onclick = () => chooseCloud().catch((error) => message(error.message, true));
@@ -233,5 +318,5 @@
     });
   }
 
-  window.PixelObbyCloud = { init, queueProgress, saveProgress, recordRun };
+  window.PixelObbyCloud = { init, queueProgress, saveProgress, recordRun, track };
 })();
