@@ -50,9 +50,8 @@
     <button id="btn-play" class="big-btn">PLAY</button>
     <button id="btn-levels" class="big-btn alt">MY OBBIES</button>
     <button id="btn-market" class="big-btn alt">MARKET</button>
-    <button id="btn-more-menu" class="big-btn alt">MENU</button>
-    <button id="btn-howto" class="big-btn alt hidden">HOW TO PLAY</button>
-    <button id="btn-account" class="big-btn alt hidden">SAVE ONLINE</button>
+    <button id="btn-howto" class="big-btn alt">HOW TO PLAY</button>
+    <button id="btn-account" class="big-btn alt">SAVE ONLINE</button>
     <p id="menu-cloud-status" class="cloud-status">Guest mode · saved on this device</p>
     <p class="cloud-status"><a href="privacy.html" style="color:#b8b8c8;">Privacy</a></p>
   </div>
@@ -140,35 +139,6 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="cloud-sync.js"></script>
 <script src="game.js"></script>
-<script>
-(function () {
-  const more = document.getElementById("btn-more-menu");
-  const howto = document.getElementById("btn-howto");
-  const account = document.getElementById("btn-account");
-  const menu = document.getElementById("menu");
-
-  function collapseSecondaryMenu() {
-    more.classList.remove("hidden");
-    howto.classList.add("hidden");
-    account.classList.add("hidden");
-  }
-
-  function expandSecondaryMenu() {
-    more.classList.add("hidden");
-    howto.classList.remove("hidden");
-    account.classList.remove("hidden");
-  }
-
-  more.addEventListener("click", expandSecondaryMenu);
-
-  // Whenever the main menu is opened again, start compact.
-  const observer = new MutationObserver(() => {
-    if (!menu.classList.contains("hidden")) collapseSecondaryMenu();
-  });
-  observer.observe(menu, { attributes: true, attributeFilter: ["class"] });
-  collapseSecondaryMenu();
-})();
-</script>
 <script src="analytics.js"></script>
 </body>
 </html>
