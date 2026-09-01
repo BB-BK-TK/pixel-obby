@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex,nofollow">
+  <title>Pixel Obby Analytics</title>
+  <style>
+    :root { color-scheme: dark; --bg:#0b0b1a; --panel:#17172b; --panel2:#20203a; --text:#f7f7fb; --muted:#9aa0b8; --gold:#ffd84d; --green:#7cfc00; --purple:#6868a7; --border:#303052; }
+    * { box-sizing: border-box; }
+    body { margin:0; background:var(--bg); color:var(--text); font-family: Inter, ui-sans-serif, system-ui, -apple-system, sans-serif; }
+    main { width:min(1120px, calc(100% - 32px)); margin:0 auto; padding:32px 0 56px; }
+    header { display:flex; justify-content:space-between; gap:18px; align-items:flex-end; margin-bottom:24px; }
+    h1 { margin:0; color:var(--gold); font-size:clamp(28px,4vw,44px); }
+    .sub { color:var(--muted); margin:6px 0 0; line-height:1.5; }
+    button { border:1px solid var(--border); background:var(--panel2); color:var(--text); padding:10px 14px; border-radius:10px; font:inherit; cursor:pointer; }
+    .cards { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; }
+    .card { background:var(--panel); border:1px solid var(--border); border-radius:14px; padding:18px; min-height:116px; }
+    .label { color:var(--muted); font-size:13px; }
+    .value { font-size:clamp(30px,4vw,46px); font-weight:800; margin-top:10px; letter-spacing:-1px; }
+    .accent { color:var(--green); }
+    section { margin-top:22px; background:var(--panel); border:1px solid var(--border); border-radius:14px; padding:18px; }
+    section h2 { margin:0 0 16px; font-size:18px; }
+    .chart { display:flex; align-items:flex-end; gap:8px; height:220px; padding:8px 2px 28px; border-bottom:1px solid var(--border); overflow-x:auto; }
+    .day { min-width:48px; height:100%; display:flex; flex-direction:column; justify-content:flex-end; align-items:center; gap:5px; position:relative; }
+    .bar { width:30px; min-height:2px; background:var(--purple); border-radius:5px 5px 0 0; }
+    .bar-value { font-size:11px; color:var(--text); }
+    .day-label { position:absolute; bottom:-22px; font-size:10px; color:var(--muted); white-space:nowrap; }
+    table { width:100%; border-collapse:collapse; font-size:14px; }
+    th,td { text-align:right; padding:11px 8px; border-bottom:1px solid var(--border); }
+    th:first-child,td:first-child { text-align:left; }
+    th { color:var(--muted); font-weight:600; }
+    .foot { color:var(--muted); font-size:12px; line-height:1.55; margin-top:18px; }
+    .status { color:var(--muted); font-size:12px; }
+    .error { color:#ff9a9a; }
+    @media (max-width:760px) { .cards { grid-template-columns:repeat(2,minmax(0,1fr)); } header { align-items:flex-start; flex-direction:column; } }
+    @media (max-width:460px) { main { width:min(100% - 20px,1120px); padding-top:20px; } .cards { grid-template-columns:1fr 1fr; gap:8px; } .card { min-height:100px; padding:14px; } section { padding:14px; } }
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <div>
+      <h1>Pixel Obby Analytics</h1>
+      <p class="sub">익명 사용자 흐름 · 한국시간 기준</p>
+    </div>
+    <div>
+      <button id="refresh">새로고침</button>
+      <div id="status" class="status" style="margin-top:7px"></div>
+    </div>
+  </header>
+
+  <div class="cards">
+    <div class="card"><div class="label">오늘 방문자</div><div id="today" class="value">–</div></div>
+    <div class="card"><div class="label">최근 7일 방문자</div><div id="week" class="value">–</div></div>
+    <div class="card"><div class="label">최근 7일 게임 시작</div><div id="starts" class="value accent">–</div></div>
+    <div class="card"><div class="label">최근 7일 Obby 완료</div><div id="completions" class="value">–</div></div>
+    <div class="card"><div class="label">최근 7일 재방문 사용자</div><div id="returning" class="value">–</div></div>
+    <div class="card"><div class="label">전체 추적 사용자</div><div id="total" class="value">–</div></div>
+  </div>
+
+  <section>
+    <h2>14일 일별 방문자</h2>
+    <div id="chart" class="chart"></div>
+  </section>
+
+  <section>
+    <h2>일별 상세</h2>
+    <div style="overflow-x:auto">
+      <table>
+        <thead><tr><th>날짜</th><th>방문자</th><th>게임 시작</th><th>Obby 완료</th></tr></thead>
+        <tbody id="daily"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <p class="foot">방문자는 Pixel Obby가 브라우저/앱 저장소에 만든 익명 랜덤 ID 기준입니다. 같은 사람이 다른 기기를 쓰거나 앱 데이터를 삭제하면 새 사용자로 잡힐 수 있습니다. “재방문 사용자”는 최근 7일 동안 2개 이상의 세션에서 관측된 익명 사용자입니다. 이메일이나 계정 생성 없이도 집계되며, 원시 이벤트 데이터는 이 대시보드에서 조회할 수 없습니다. 추적은 이 analytics 기능이 배포된 시점부터 시작됩니다.</p>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  const SUPABASE_URL = "https://kwsrktcsthksnvgbquup.supabase.co";
+  const SUPABASE_KEY = "sb_publishable_Qx-QIsbRqz1hcJebGzPgIw_PtePCnWl";
+  const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { persistSession: false } });
+  const $ = id => document.getElementById(id);
+  const n = value => Number(value || 0).toLocaleString("ko-KR");
+
+  function renderChart(rows) {
+    const max = Math.max(1, ...rows.map(r => Number(r.unique_visitors || 0)));
+    $("chart").innerHTML = rows.map(r => {
+      const v = Number(r.unique_visitors || 0);
+      const height = Math.max(2, Math.round((v / max) * 160));
+      const label = String(r.day).slice(5);
+      return `<div class="day"><div class="bar-value">${v}</div><div class="bar" style="height:${height}px" title="${r.day}: ${v}명"></div><div class="day-label">${label}</div></div>`;
+    }).join("");
+  }
+
+  function renderTable(rows) {
+    $("daily").innerHTML = [...rows].reverse().map(r => `<tr><td>${r.day}</td><td>${n(r.unique_visitors)}</td><td>${n(r.game_starts)}</td><td>${n(r.obby_completions)}</td></tr>`).join("");
+  }
+
+  async function load() {
+    $("status").className = "status";
+    $("status").textContent = "불러오는 중…";
+    const [summaryResult, dailyResult] = await Promise.all([
+      db.rpc("pixel_obby_analytics_summary"),
+      db.rpc("pixel_obby_analytics_daily", { p_days: 14 })
+    ]);
+    if (summaryResult.error) throw summaryResult.error;
+    if (dailyResult.error) throw dailyResult.error;
+
+    const s = summaryResult.data || {};
+    $("today").textContent = n(s.today_visitors);
+    $("week").textContent = n(s.seven_day_visitors);
+    $("starts").textContent = n(s.seven_day_game_starts);
+    $("completions").textContent = n(s.seven_day_obby_completions);
+    $("returning").textContent = n(s.seven_day_returning_visitors);
+    $("total").textContent = n(s.total_tracked_visitors);
+    renderChart(dailyResult.data || []);
+    renderTable(dailyResult.data || []);
+
+    const now = new Intl.DateTimeFormat("ko-KR", { timeZone:"Asia/Seoul", hour:"2-digit", minute:"2-digit", second:"2-digit" }).format(new Date());
+    $("status").textContent = `마지막 업데이트 ${now}`;
+  }
+
+  $("refresh").addEventListener("click", () => load().catch(showError));
+  function showError(err) { $("status").className = "status error"; $("status").textContent = "불러오기 실패: " + (err?.message || err); }
+  load().catch(showError);
+  setInterval(() => load().catch(showError), 60000);
+</script>
+</body>
+</html>
