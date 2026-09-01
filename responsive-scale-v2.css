@@ -1,0 +1,133 @@
+/* Final visual scale pass: keep landscape layouts full and readable without scrolling. */
+
+@media (orientation: landscape) and (min-height: 561px) {
+  #menu,
+  #complete,
+  #market,
+  #account {
+    gap: clamp(8px, 1.7dvh, 14px);
+  }
+
+  #menu .title {
+    font-size: clamp(46px, 9.2dvh, 68px);
+  }
+
+  #complete .title.small,
+  #market .title.small,
+  #account .title.small {
+    font-size: clamp(38px, 8dvh, 56px);
+  }
+
+  #menu .subtitle,
+  #complete .subtitle,
+  #account .subtitle {
+    font-size: clamp(15px, 3dvh, 20px);
+    line-height: 1.15;
+  }
+
+  #menu .menu-stats,
+  #market .menu-stats {
+    font-size: clamp(17px, 3.3dvh, 22px);
+  }
+
+  #complete .reward {
+    font-size: clamp(34px, 7dvh, 48px);
+  }
+
+  #menu .big-btn,
+  #complete .big-btn,
+  #market #btn-market-back,
+  #account .big-btn {
+    min-width: clamp(320px, 34vw, 460px);
+    font-size: clamp(18px, 3.9dvh, 26px);
+    padding: clamp(9px, 1.65dvh, 12px) clamp(40px, 5.2vw, 58px);
+    border-bottom-width: 5px;
+  }
+
+  #menu .cloud-status {
+    font-size: clamp(11px, 2.1dvh, 14px);
+  }
+
+  #market .market-tab {
+    font-size: clamp(16px, 3.3dvh, 21px);
+    padding: clamp(7px, 1.35dvh, 10px) clamp(22px, 3.8vw, 32px);
+  }
+
+  #market #skin-grid,
+  #market #item-grid {
+    width: min(92vw, 980px);
+    max-height: min(50dvh, 430px);
+    grid-template-columns: repeat(auto-fit, minmax(clamp(145px, 16vw, 190px), 1fr));
+    gap: clamp(8px, 1.4dvh, 13px);
+  }
+
+  #market .skin-card {
+    padding: clamp(9px, 1.45dvh, 13px) 10px;
+    gap: clamp(6px, 1.1dvh, 9px);
+  }
+
+  #market .skin-card canvas {
+    width: clamp(56px, 9.5dvh, 80px);
+    height: clamp(56px, 9.5dvh, 80px);
+  }
+
+  #market .skin-name {
+    font-size: clamp(13px, 2.7dvh, 17px);
+  }
+
+  #market .skin-desc {
+    font-size: clamp(10px, 2dvh, 13px);
+  }
+
+  #market .skin-price,
+  #market .item-stock {
+    font-size: clamp(12px, 2.3dvh, 15px);
+  }
+
+  #market .skin-btn {
+    font-size: clamp(12px, 2.4dvh, 15px);
+    padding: clamp(6px, 1.05dvh, 8px) clamp(14px, 2.2vw, 20px);
+  }
+
+  #account .account-card {
+    width: min(78vw, 820px);
+    gap: clamp(9px, 1.5dvh, 13px);
+    padding: clamp(14px, 2.3dvh, 22px);
+  }
+
+  #account .account-card label,
+  #account .account-user {
+    font-size: clamp(13px, 2.6dvh, 18px);
+  }
+
+  #account-email {
+    padding: clamp(9px, 1.55dvh, 13px) 15px;
+    font-size: clamp(15px, 2.8dvh, 18px);
+  }
+
+  #account .hint,
+  #account .cloud-status,
+  #account .account-message {
+    font-size: clamp(11px, 2.1dvh, 14px);
+  }
+
+  #account .danger-btn {
+    min-width: clamp(320px, 34vw, 460px);
+    font-size: clamp(13px, 2.7dvh, 17px);
+    padding: clamp(7px, 1.25dvh, 10px) 20px;
+  }
+}
+
+/* Very wide landscape screens can support one more visual step up. */
+@media (orientation: landscape) and (min-height: 650px) and (min-width: 1200px) {
+  #menu .title {
+    font-size: clamp(56px, 9dvh, 72px);
+  }
+
+  #menu .big-btn,
+  #complete .big-btn,
+  #market #btn-market-back,
+  #account .big-btn {
+    min-width: clamp(380px, 33vw, 500px);
+  }
+}
