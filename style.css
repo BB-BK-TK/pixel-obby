@@ -635,3 +635,45 @@ canvas#game {
     padding: 6px 10px;
   }
 }
+
+/* Medium/large landscape: use the available height instead of shrinking to phone-safe minimums. */
+@media (orientation: landscape) and (min-height: 561px) {
+  #menu,
+  #complete {
+    gap: clamp(7px, 1.5dvh, 12px);
+  }
+
+  #menu .title {
+    font-size: clamp(40px, 8.5dvh, 60px);
+  }
+
+  #complete .title.small {
+    font-size: clamp(34px, 7.5dvh, 50px);
+  }
+
+  #menu .subtitle,
+  #complete .subtitle {
+    font-size: clamp(14px, 2.8dvh, 19px);
+    line-height: 1.15;
+  }
+
+  #menu .menu-stats {
+    font-size: clamp(16px, 3.1dvh, 20px);
+  }
+
+  #complete .reward {
+    font-size: clamp(32px, 6.5dvh, 44px);
+  }
+
+  #menu .big-btn,
+  #complete .big-btn {
+    min-width: clamp(280px, 34vw, 390px);
+    font-size: clamp(17px, 3.7dvh, 24px);
+    padding: clamp(8px, 1.55dvh, 11px) clamp(36px, 5vw, 52px);
+    border-bottom-width: 5px;
+  }
+
+  #menu .cloud-status {
+    font-size: clamp(10px, 2dvh, 13px);
+  }
+}
