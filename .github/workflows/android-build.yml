@@ -45,3 +45,4 @@ jobs:
         with:
           name: pixel-obby-aab-unsigned
           path: android/app/build/outputs/bundle/release/*.aab
+          retention-days: 3
