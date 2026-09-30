@@ -1,0 +1,16 @@
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.bbkbtk.pixelobby",
+      "sha256_cert_fingerprints": [
+        "17:46:83:2B:B7:96:0E:2F:EA:10:21:86:8B:91:6D:B9:D6:57:09:73:FE:B4:74:47:80:E3:2F:74:86:2E:D3:D0",
+        "E4:EA:74:49:51:5E:77:AA:C9:0B:AE:E2:19:33:97:B3:21:98:92:EA:94:AE:CD:55:0C:28:F1:2D:DA:98:B4:D4",
+        "98:BE:C9:46:5E:C3:CD:86:14:A4:CB:F4:57:0D:6F:00:78:4A:FC:FB:87:15:82:BF:C7:C8:2F:27:1D:50:29:36"
+      ]
+    }
+  }
+]
