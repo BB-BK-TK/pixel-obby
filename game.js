@@ -18,8 +18,8 @@ const XP_PER_OBBY = 100;
 //   - BGM: a single looping <audio> element (assets/audio/Pixel_Obby.mp3)
 //   - SFX: short synthesized Web Audio cues (no sound files needed)
 //   - two independent switches, stored with the rest of the save data:
-//       save.bgmEnabled -> "B" button (background music only)
-//       save.sfxEnabled -> "G" button (gameplay sound effects only)
+//       save.bgmEnabled -> music-note button (background music only)
+//       save.sfxEnabled -> speaker button (gameplay sound effects only)
 // Browsers block audio until the first tap/key, so everything is lazy and
 // kicked off from unlock(), which the input handlers call.
 
@@ -188,13 +188,18 @@ const GameAudio = {
   },
 
   // B / G when on, X when off. The two buttons never move or merge.
+  // The buttons hold pixel icons (music note / speaker); "off" draws a red
+  // slash over the icon via CSS and updates the tooltip + accessible state.
   updateButtons() {
-    const b = document.getElementById("btn-bgm");
-    const g = document.getElementById("btn-sfx");
-    b.textContent = save.bgmEnabled ? "B" : "X";
-    b.classList.toggle("off", !save.bgmEnabled);
-    g.textContent = save.sfxEnabled ? "G" : "X";
-    g.classList.toggle("off", !save.sfxEnabled);
+    const setBtn = (id, on, what) => {
+      const el = document.getElementById(id);
+      el.classList.toggle("off", !on);
+      el.title = what + ": " + (on ? "on" : "off");
+      el.setAttribute("aria-label", el.title);
+      el.setAttribute("aria-pressed", on ? "true" : "false");
+    };
+    setBtn("btn-bgm", save.bgmEnabled, "Music");
+    setBtn("btn-sfx", save.sfxEnabled, "Game sounds");
   },
 };
 

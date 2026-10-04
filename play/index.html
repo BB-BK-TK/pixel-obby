@@ -37,10 +37,18 @@
     <button id="btn-jump" class="touch-btn jump">JUMP</button>
   </div>
 
-  <!-- Audio toggles: B = background music, G = game sounds. Each shows X when off. -->
+  <!-- Audio toggles: music note = background music, speaker = game sounds. A red slash means off. -->
   <div id="audio-toggles" class="hidden">
-    <button id="btn-bgm" class="audio-btn" type="button" aria-label="Toggle background music" title="Toggle background music">B</button>
-    <button id="btn-sfx" class="audio-btn" type="button" aria-label="Toggle game sounds" title="Toggle game sounds">G</button>
+    <button id="btn-bgm" class="audio-btn" type="button" aria-label="Music: on" title="Music: on" aria-pressed="true">
+      <svg class="audio-icon" viewBox="0 0 16 16" shape-rendering="crispEdges" aria-hidden="true" focusable="false">
+        <path d="M9 1h2v11H9z M11 2h2v2h-2z M13 4h1v3h-1z M5 10h6v1h1v3h-1v1H5v-1H4v-3h1z"/>
+      </svg>
+    </button>
+    <button id="btn-sfx" class="audio-btn" type="button" aria-label="Game sounds: on" title="Game sounds: on" aria-pressed="true">
+      <svg class="audio-icon" viewBox="0 0 16 16" shape-rendering="crispEdges" aria-hidden="true" focusable="false">
+        <path d="M1 6h3v4H1z M4 6h2V4h2V2h1v12H8v-2H6v-2H4z M11 6h1v4h-1z M13 3h1v2h-1z M14 5h1v6h-1z M13 11h1v2h-1z"/>
+      </svg>
+    </button>
   </div>
 
   <div id="menu" class="overlay">
