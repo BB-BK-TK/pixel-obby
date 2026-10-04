@@ -1709,6 +1709,7 @@ function playLevel(n) {
 function setState(s) {
   if (s === "playing" && world && !canPlayLevel(world.n)) s = "trial";
   state = s;
+  document.getElementById("trial").classList.toggle("hidden", s !== "trial");
   document.getElementById("menu").classList.toggle("hidden", s !== "menu");
   document.getElementById("market").classList.toggle("hidden", s !== "market");
   document.getElementById("complete").classList.toggle("hidden", s !== "complete");
@@ -1747,8 +1748,7 @@ function buildLevels() {
 }
 
 function startObby() {
-  loadLevel(save.level);
-  setState("playing");
+  playLevel(save.level);
 }
 
 function refreshXpLabels() {
