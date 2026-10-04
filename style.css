@@ -133,6 +133,41 @@ canvas#game {
 }
 .touch-btn:active { filter: brightness(1.5); }
 
+/* ---------- Audio toggles (B = music, G = game sounds, X = off) ---------- */
+#audio-toggles {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 5;
+  pointer-events: none;
+}
+
+.audio-btn {
+  pointer-events: auto;
+  width: clamp(40px, 6vw, 52px);
+  height: clamp(40px, 6vw, 52px);
+  font-family: inherit;
+  font-weight: bold;
+  font-size: clamp(16px, 2.6vw, 22px);
+  color: #fff;
+  text-shadow: 2px 2px 0 #000;
+  background: rgba(45, 45, 77, 0.85);
+  border: 3px solid #4a4a7a;
+  border-radius: 10px;
+  cursor: pointer;
+}
+.audio-btn:hover { background: rgba(60, 60, 102, 0.9); }
+.audio-btn:active { filter: brightness(1.4); }
+.audio-btn.off {
+  color: #ff8a8a;
+  background: rgba(60, 30, 30, 0.85);
+  border-color: #5a2a2a;
+}
+
 /* ---------- Overlays ---------- */
 .overlay {
   position: absolute;

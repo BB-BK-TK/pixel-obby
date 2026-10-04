@@ -13,48 +13,190 @@ const H = canvas.height;
 
 const XP_PER_OBBY = 100;
 
-/* ---------------- Sound ---------------- */
-// Lazily created on first user gesture (browsers block audio before that).
-let audioCtx = null;
+/* ---------------- Audio (GameAudio) ---------------- */
+// Every sound in the game goes through this one object:
+//   - BGM: a single looping <audio> element (assets/audio/Pixel_Obby.mp3)
+//   - SFX: short synthesized Web Audio cues (no sound files needed)
+//   - two independent switches, stored with the rest of the save data:
+//       save.bgmEnabled -> "B" button (background music only)
+//       save.sfxEnabled -> "G" button (gameplay sound effects only)
+// Browsers block audio until the first tap/key, so everything is lazy and
+// kicked off from unlock(), which the input handlers call.
 
-function unlockAudio() {
-  if (!audioCtx) {
-    const AC = window.AudioContext || window.webkitAudioContext;
-    if (!AC) return;
-    audioCtx = new AC();
-  }
-  if (audioCtx.state === "suspended") audioCtx.resume();
-}
+// The game page is served from /play/, so site-root assets are reached with "../"
+// (same convention as the service-worker registration below).
+const BGM_FILE = "../assets/audio/Pixel_Obby.mp3";
+const BGM_SRC = (() => {
+  try { return new URL(BGM_FILE, document.baseURI).href; } catch (e) { return BGM_FILE; }
+})();
+const BGM_VOLUME = 0.25;
 
-// A cartoony duck "quack": a sawtooth that pitch-drops through a lowpass,
-// played as two quick syllables.
-function playQuack() {
-  if (!audioCtx || audioCtx.state !== "running") return;
-  const now = audioCtx.currentTime;
+// Gameplay sound effects, built from tiny oscillator "tones". Keep them short:
+// jump/land fire constantly, checkpoint and clear are meant to feel bigger.
+const SFX = {
+  jump: (a) => a.tone({ type: "triangle", f0: 330, f1: 660, dur: 0.1, vol: 0.16 }),
+  land: (a) => a.tone({ type: "sine", f0: 170, f1: 110, dur: 0.07, vol: 0.07 }),
+  death: (a) => a.tone({ type: "square", f0: 480, f1: 110, dur: 0.38, vol: 0.12, lowpass: 1400, q: 2 }),
+  respawn: (a) => {
+    // plays right after the death slide finishes
+    a.tone({ type: "triangle", f0: 440, dur: 0.08, vol: 0.09, when: 0.36 });
+    a.tone({ type: "triangle", f0: 660, dur: 0.12, vol: 0.1, when: 0.44 });
+  },
+  checkpoint: (a) => {
+    [880, 1175, 1760].forEach((f, i) => a.tone({ type: "sine", f0: f, dur: 0.22, vol: 0.14, when: i * 0.09 }));
+    a.tone({ type: "triangle", f0: 2350, dur: 0.4, vol: 0.06, when: 0.27 }); // sparkle tail
+  },
+  clear: (a) => {
+    [523, 659, 784, 1047].forEach((f, i) => a.tone({ type: "square", f0: f, dur: 0.2, vol: 0.07, when: i * 0.12, lowpass: 2200 }));
+    [1047, 1319, 1568].forEach((f) => a.tone({ type: "triangle", f0: f, dur: 0.8, vol: 0.07, when: 0.5 })); // final chord
+  },
+  click: (a) => a.tone({ type: "square", f0: 900, f1: 700, dur: 0.045, vol: 0.07, lowpass: 2500 }),
+  // duck skin: a sawtooth that pitch-drops through a lowpass, two syllables
+  quack: (a) => {
+    a.tone({ type: "sawtooth", f0: 520, f1: 300, dur: 0.12, vol: 0.25, lowpass: 1400, q: 6, attack: 0.012 });
+    a.tone({ type: "sawtooth", f0: 470, f1: 250, dur: 0.14, vol: 0.2, lowpass: 1400, q: 6, attack: 0.012, when: 0.13 });
+  },
+};
 
-  const syllable = (start, f0, f1, dur, peak) => {
-    const osc = audioCtx.createOscillator();
-    const filter = audioCtx.createBiquadFilter();
-    const gain = audioCtx.createGain();
-    osc.type = "sawtooth";
-    osc.frequency.setValueAtTime(f0, start);
-    osc.frequency.exponentialRampToValueAtTime(f1, start + dur);
-    filter.type = "lowpass";
-    filter.frequency.setValueAtTime(1400, start);
-    filter.Q.value = 6;
-    gain.gain.setValueAtTime(0.0001, start);
-    gain.gain.exponentialRampToValueAtTime(peak, start + 0.012);
-    gain.gain.exponentialRampToValueAtTime(0.0001, start + dur);
-    osc.connect(filter);
-    filter.connect(gain);
-    gain.connect(audioCtx.destination);
-    osc.start(start);
-    osc.stop(start + dur + 0.02);
-  };
+const GameAudio = {
+  ctx: null,        // Web Audio context for SFX (created on first gesture)
+  unlocked: false,  // true once the user has tapped/pressed something
+  bgm: null,        // the one and only <audio> element for music
+  bgmFailed: false, // file missing / unsupported -> stay silent, never crash
 
-  syllable(now, 520, 300, 0.12, 0.25);
-  syllable(now + 0.13, 470, 250, 0.14, 0.2);
-}
+  init() {
+    this.ensureBgm(); // start buffering early; harmless if the file is missing
+    this.updateButtons();
+
+    const bgmBtn = document.getElementById("btn-bgm");
+    const sfxBtn = document.getElementById("btn-sfx");
+    bgmBtn.onclick = () => { this.unlock(); this.setBgmEnabled(!save.bgmEnabled); bgmBtn.blur(); };
+    sfxBtn.onclick = () => { this.unlock(); this.setSfxEnabled(!save.sfxEnabled); sfxBtn.blur(); };
+
+    // one click sound for every real UI button (menus, market, HUD) --
+    // not the movement/jump pads, which are gameplay input
+    document.getElementById("game-wrap").addEventListener("click", (e) => {
+      const btn = e.target && e.target.closest ? e.target.closest("button") : null;
+      if (!btn || btn.disabled || btn.classList.contains("touch-btn")) return;
+      this.play("click");
+    });
+
+    // tab hidden / app backgrounded -> pause music; back -> resume (no restart)
+    document.addEventListener("visibilitychange", () => this.syncBgm());
+    window.addEventListener("pagehide", () => this.syncBgm());
+  },
+
+  // Called from the first (and every) user gesture: creates/resumes the audio
+  // context and starts the music if it is allowed to play right now.
+  unlock() {
+    this.unlocked = true;
+    if (!this.ctx) {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (AC) { try { this.ctx = new AC(); } catch (e) { this.ctx = null; } }
+    }
+    if (this.ctx && this.ctx.state === "suspended") {
+      const p = this.ctx.resume();
+      if (p && p.catch) p.catch(() => {});
+    }
+    this.syncBgm();
+  },
+
+  /* ---- background music ---- */
+
+  ensureBgm() {
+    if (this.bgm || this.bgmFailed) return this.bgm;
+    if (typeof Audio === "undefined") { this.bgmFailed = true; return null; }
+    try {
+      const a = new Audio(BGM_SRC);
+      a.loop = true;
+      a.preload = "auto";
+      a.volume = BGM_VOLUME;
+      a.addEventListener("error", () => { this.bgmFailed = true; this.bgm = null; });
+      this.bgm = a;
+    } catch (e) { this.bgmFailed = true; }
+    return this.bgm;
+  },
+
+  bgmShouldPlay() {
+    return save.bgmEnabled && this.unlocked && state === "playing" && !document.hidden;
+  },
+
+  // Play or pause the single BGM element so it matches the current state.
+  // Never rewinds, so dying, respawning, pausing or switching tabs never
+  // restarts the track, and there is only ever one instance.
+  syncBgm() {
+    if (!this.bgmShouldPlay()) {
+      if (this.bgm && !this.bgm.paused) this.bgm.pause();
+      return;
+    }
+    const a = this.ensureBgm();
+    if (!a || !a.paused) return;
+    const p = a.play();
+    if (p && p.catch) p.catch(() => { /* autoplay blocked or file missing: stay quiet */ });
+  },
+
+  /* ---- gameplay sound effects ---- */
+
+  // Gated only by the "G" switch; the music is never affected.
+  play(name) {
+    if (!save.sfxEnabled) return;
+    if (!this.ctx || this.ctx.state !== "running") return;
+    const fx = SFX[name];
+    if (!fx) return;
+    try { fx(this); } catch (e) { /* audio must never break the game */ }
+  },
+
+  tone(o) {
+    const c = this.ctx;
+    const t0 = c.currentTime + (o.when || 0);
+    const osc = c.createOscillator();
+    const gain = c.createGain();
+    osc.type = o.type || "sine";
+    osc.frequency.setValueAtTime(o.f0, t0);
+    if (o.f1 && o.f1 !== o.f0) osc.frequency.exponentialRampToValueAtTime(o.f1, t0 + o.dur);
+    gain.gain.setValueAtTime(0.0001, t0);
+    gain.gain.exponentialRampToValueAtTime(o.vol, t0 + (o.attack || 0.008));
+    gain.gain.exponentialRampToValueAtTime(0.0001, t0 + o.dur);
+    let node = osc;
+    if (o.lowpass) {
+      const f = c.createBiquadFilter();
+      f.type = "lowpass";
+      f.frequency.setValueAtTime(o.lowpass, t0);
+      f.Q.value = o.q || 1;
+      osc.connect(f);
+      node = f;
+    }
+    node.connect(gain);
+    gain.connect(c.destination);
+    osc.start(t0);
+    osc.stop(t0 + o.dur + 0.03);
+  },
+
+  /* ---- the two independent switches ---- */
+
+  setBgmEnabled(on) {
+    save.bgmEnabled = !!on;
+    writeSave();
+    this.syncBgm();
+    this.updateButtons();
+  },
+
+  setSfxEnabled(on) {
+    save.sfxEnabled = !!on;
+    writeSave();
+    this.updateButtons();
+  },
+
+  // B / G when on, X when off. The two buttons never move or merge.
+  updateButtons() {
+    const b = document.getElementById("btn-bgm");
+    const g = document.getElementById("btn-sfx");
+    b.textContent = save.bgmEnabled ? "B" : "X";
+    b.classList.toggle("off", !save.bgmEnabled);
+    g.textContent = save.sfxEnabled ? "G" : "X";
+    g.classList.toggle("off", !save.sfxEnabled);
+  },
+};
 
 /* ---------------- Save data ---------------- */
 
@@ -70,6 +212,8 @@ let save = {
   seenTutorial: false,
   ownedItems: [],
   equipped: { hat: null, back: null, feet: null, charm: null },
+  bgmEnabled: true, // "B" button: background music
+  sfxEnabled: true, // "G" button: gameplay sound effects
 };
 
 function loadSave() {
@@ -84,6 +228,9 @@ function loadSave() {
       save.seenTutorial = !!data.seenTutorial;
       save.ownedItems = Array.isArray(data.ownedItems) ? data.ownedItems : [];
       save.equipped = data.equipped || { hat: null, back: null, feet: null, charm: null };
+      // audio switches are independent; older saves without them default to on
+      save.bgmEnabled = data.bgmEnabled !== false;
+      save.sfxEnabled = data.sfxEnabled !== false;
       // move old consumable items into owned list
       if (data.items && typeof data.items === "object") {
         for (const [id, n] of Object.entries(data.items)) {
@@ -1197,7 +1344,7 @@ function updateSkinEffects(dt) {
 
   if (save.skin === "duck" && wasGrounded && !player.grounded && player.vy < -200) {
     spawnParticle({ x: player.x + P_SIZE / 2, y: player.y - 12, vy: -30, life: 1.1, decay: 1, kind: "quack" });
-    playQuack();
+    GameAudio.play("quack");
   }
   wasGrounded = player.grounded;
 
@@ -1531,6 +1678,8 @@ function respawn() {
 
 function hurtPlayer() {
   runAttempts += 1;
+  GameAudio.play("death");
+  GameAudio.play("respawn"); // cue is scheduled to land just after the death sound
   respawn();
 }
 
@@ -1565,6 +1714,8 @@ function updatePlatforms(dt) {
 }
 
 function updatePlayer(dt) {
+  const wasOnGround = player.grounded; // for the landing sound
+
   // ride moving platform
   if (player.grounded && player.groundPlat && player.groundPlat.mover) {
     player.x += player.groundPlat.dx;
@@ -1587,6 +1738,7 @@ function updatePlayer(dt) {
     player.jumpBuffer = 0;
     player.grounded = false;
     player.groundPlat = null;
+    GameAudio.play("jump");
   }
   // variable jump height: release early = shorter hop
   if (!input.jump && player.vy < -200) player.vy = -200;
@@ -1620,6 +1772,7 @@ function updatePlayer(dt) {
         player.grounded = true;
         player.groundPlat = p;
         if (p.type === "checkpoint") {
+          if (!p.touched) GameAudio.play("checkpoint"); // only when newly reached
           p.touched = true;
           world.checkpoint = { x: p.baseX + p.w / 2 - P_SIZE / 2, y: p.baseY - P_SIZE - 12 };
         }
@@ -1629,6 +1782,7 @@ function updatePlayer(dt) {
       }
     }
   }
+  if (player.grounded && !wasOnGround) GameAudio.play("land");
 
   // spikes (hitbox slightly smaller than the player so it feels fair)
   for (const p of world.platforms) {
@@ -1666,6 +1820,7 @@ let levelsReturn = "menu";
 let startAfterTutorial = false;
 
 function completeObby() {
+  GameAudio.play("clear");
   const replay = world.n < save.level;
   const reward = replay ? 25 : XP_PER_OBBY;
   const completedRun = {
@@ -1718,11 +1873,13 @@ function setState(s) {
   document.getElementById("account").classList.toggle("hidden", s !== "account");
   document.getElementById("hud").classList.toggle("hidden", s !== "playing");
   document.getElementById("touch-controls").classList.toggle("hidden", s !== "playing");
+  document.getElementById("audio-toggles").classList.toggle("hidden", s !== "playing");
   if (s === "market") { marketTab = "skins"; showMarketTab(); }
   if (s === "levels") buildLevels();
   // drop focus so SPACE jumps instead of re-clicking the last button
   if (s === "playing" && document.activeElement) document.activeElement.blur();
   refreshXpLabels();
+  GameAudio.syncBgm(); // music runs during gameplay, pauses (not restarts) elsewhere
 }
 
 function buildLevels() {
@@ -1911,9 +2068,9 @@ function pressJump() {
   input.jump = true;
 }
 
-window.addEventListener("pointerdown", unlockAudio);
+window.addEventListener("pointerdown", () => GameAudio.unlock());
 window.addEventListener("keydown", (e) => {
-  unlockAudio();
+  GameAudio.unlock();
   if (e.repeat) return;
   const k = e.key.toLowerCase();
   if (k === "arrowleft" || k === "a") input.left = true;
@@ -1929,7 +2086,7 @@ window.addEventListener("keyup", (e) => {
 
 function bindHold(id, on, off) {
   const el = document.getElementById(id);
-  el.addEventListener("pointerdown", (e) => { e.preventDefault(); unlockAudio(); on(); });
+  el.addEventListener("pointerdown", (e) => { e.preventDefault(); GameAudio.unlock(); on(); });
   el.addEventListener("pointerup", off);
   el.addEventListener("pointercancel", off);
   el.addEventListener("pointerleave", off);
@@ -2251,6 +2408,7 @@ window.PixelObbyGame = {
 /* ---------------- Boot ---------------- */
 
 loadSave();
+GameAudio.init();
 loadLevel(save.level);
 setState("menu");
 requestAnimationFrame(frame);

@@ -1,7 +1,7 @@
 "use strict";
-const CACHE = "pixel-obby-v5-trial";
+const CACHE = "pixel-obby-v6-audio";
 const ROOT = new URL("./", self.location.href);
-const FILES = ["", "index.html", "play/", "play/index.html", "landing.css", "landing.js", "style.css", "responsive-panels.css", "responsive-scale-v2.css", "game.js", "cloud-sync.js", "analytics.js", "manifest.webmanifest", "icon-192.png", "icon-512.png"];
+const FILES = ["", "index.html", "play/", "play/index.html", "landing.css", "landing.js", "style.css", "responsive-panels.css", "responsive-scale-v2.css", "game.js", "cloud-sync.js", "analytics.js", "manifest.webmanifest", "icon-192.png", "icon-512.png", "assets/audio/Pixel_Obby.mp3"];
 const URLS = FILES.map(path => new URL(path, ROOT).href);
 self.addEventListener("install", event => event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(URLS)).then(() => self.skipWaiting())));
 self.addEventListener("activate", event => event.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(key => key.startsWith("pixel-obby-") && key !== CACHE).map(key => caches.delete(key)))).then(() => self.clients.claim())));
