@@ -36,7 +36,7 @@
 
             <meta-data
                 android:name="android.support.customtabs.trusted.DEFAULT_URL"
-                android:value="https://bb-bk-tk.github.io/pixel-obby/" />
+                android:value="https://bb-bk-tk.github.io/pixel-obby/play/" />
             <meta-data
                 android:name="android.support.customtabs.trusted.STATUS_BAR_COLOR"
                 android:resource="@color/game_background" />
