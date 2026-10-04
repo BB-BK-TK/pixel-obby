@@ -4,6 +4,9 @@ const query = new URLSearchParams(location.search);
 const hash = new URLSearchParams(location.hash.slice(1));
 if (["code", "access_token", "error", "error_description"].some(key => query.has(key) || hash.has(key))) {
   location.replace(new URL("play/", document.baseURI).href + location.search + location.hash);
+} else if (navigator.standalone || window.matchMedia?.("(display-mode: standalone)").matches || window.matchMedia?.("(display-mode: fullscreen)").matches) {
+  // Existing installations may still launch the old root start URL.
+  location.replace(new URL("play/", document.baseURI).href);
 } else if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
   navigator.serviceWorker.register("sw.js").catch(() => {});
 }
