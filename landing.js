@@ -24,17 +24,25 @@ window.addEventListener("DOMContentLoaded", () => {
   const button = document.getElementById("install-app");
   const status = document.getElementById("install-status");
   const store = document.getElementById("google-play-link");
-  if (GOOGLE_PLAY_URL && !ios) {
+  const help = document.getElementById("install-help");
+  document.getElementById("install-instructions").textContent = ios
+    ? "In Safari, tap Share → Add to Home Screen. If shown, keep Open as Web App on, then tap Add."
+    : "Open your browser menu and choose Install app or Add to Home screen. If unavailable, try Chrome or Edge. You can still try levels 1–3 in your browser.";
+  document.getElementById("google-play-soon").hidden = !android || !!GOOGLE_PLAY_URL;
+  if (GOOGLE_PLAY_URL && android) {
     store.href = GOOGLE_PLAY_URL;
     store.hidden = false;
-    document.getElementById("google-play-soon").hidden = true;
-    if (android) button.textContent = "Or install the web app ↓";
-  } else if (ios) {
-    document.getElementById("google-play-soon").hidden = true;
-    button.textContent = "Add to Home Screen ↓";
+    button.hidden = true;
   }
-  const installed = () => window.matchMedia("(display-mode: standalone)").matches || window.matchMedia("(display-mode: fullscreen)").matches || navigator.standalone;
-  if (installed()) { button.hidden = true; status.textContent = "Pixel Obby is installed. Ready to play!"; }
+  const showHelp = () => {
+    help.hidden = false;
+    button.setAttribute("aria-expanded", "true");
+  };
+  // Links from the end of the preview still land at the download action.
+  if (location.hash === "#download" && !(GOOGLE_PLAY_URL && android)) showHelp();
+  window.addEventListener("hashchange", () => {
+    if (location.hash === "#download" && !(GOOGLE_PLAY_URL && android)) showHelp();
+  });
   button.addEventListener("click", async () => {
     if (installPrompt) {
       const prompt = installPrompt;
@@ -42,10 +50,12 @@ window.addEventListener("DOMContentLoaded", () => {
       await prompt.prompt();
       const choice = await prompt.userChoice;
       status.textContent = choice.outcome === "accepted" ? "Installation requested. Open Pixel Obby from your home screen." : "You can install later or keep playing in your browser.";
+    } else if (help.hidden) {
+      showHelp();
     } else {
-      status.textContent = ios ? "In Safari, tap Share → Add to Home Screen → Add." : "Open your browser menu and choose Install app or Add to Home screen. If that option is unavailable, use Chrome or Edge, or play in your browser.";
-      document.getElementById("install-help").scrollIntoView({ block: "nearest" });
+      help.hidden = true;
+      button.setAttribute("aria-expanded", "false");
     }
   });
-  window.addEventListener("appinstalled", () => { installPrompt = null; button.hidden = true; status.textContent = "Pixel Obby is installed. Open it from your home screen."; });
+  window.addEventListener("appinstalled", () => { installPrompt = null; button.hidden = true; help.hidden = true; status.textContent = "Pixel Obby is installed. Open it from your home screen."; });
 });
