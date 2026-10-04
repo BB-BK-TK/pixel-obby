@@ -1690,7 +1690,24 @@ function completeObby() {
   setState("complete");
 }
 
+// A browser preview, not an account entitlement: installed PWA/TWA runs the full game.
+const BROWSER_TRIAL_LEVELS = 3;
+function isInstalledGame() {
+  return !!(navigator.standalone ||
+    window.matchMedia?.("(display-mode: standalone)").matches ||
+    window.matchMedia?.("(display-mode: fullscreen)").matches ||
+    window.matchMedia?.("(display-mode: minimal-ui)").matches ||
+    document.referrer?.startsWith("android-app://com.bbkbtk.pixelobby"));
+}
+function canPlayLevel(n) { return isInstalledGame() || n <= BROWSER_TRIAL_LEVELS; }
+function playLevel(n) {
+  if (!canPlayLevel(n)) { setState("trial"); return; }
+  loadLevel(n);
+  setState("playing");
+}
+
 function setState(s) {
+  if (s === "playing" && world && !canPlayLevel(world.n)) s = "trial";
   state = s;
   document.getElementById("menu").classList.toggle("hidden", s !== "menu");
   document.getElementById("market").classList.toggle("hidden", s !== "market");
@@ -1710,12 +1727,20 @@ function setState(s) {
 function buildLevels() {
   const grid = document.getElementById("level-grid");
   grid.innerHTML = "";
-  for (let n = 1; n <= save.level; n++) {
+  for (let n = 1; n <= (isInstalledGame() ? save.level : Math.min(save.level, BROWSER_TRIAL_LEVELS)); n++) {
     const btn = document.createElement("button");
     btn.className = "level-btn" + (n === save.level ? " current" : "");
     btn.textContent = n === save.level ? n + " ★" : n + " ✓";
-    btn.onclick = () => { loadLevel(n); setState("playing"); };
+    btn.onclick = () => playLevel(n);
     grid.appendChild(btn);
+  }
+  if (!isInstalledGame() && save.level > BROWSER_TRIAL_LEVELS) {
+    const more = document.createElement("button");
+    more.className = "level-btn";
+    more.textContent = "4+ ↓";
+    more.title = "Download to continue";
+    more.onclick = () => setState("trial");
+    grid.appendChild(more);
   }
   // jump to the newest obby so long lists don't need scrolling up
   grid.scrollTop = grid.scrollHeight;
@@ -1731,6 +1756,8 @@ function refreshXpLabels() {
   document.getElementById("menu-xp").textContent = "XP " + save.xp;
   document.getElementById("market-xp").textContent = "Your XP: " + save.xp;
   document.getElementById("menu-level").textContent = "Obby #" + save.level;
+  document.getElementById("trial-notice").classList.toggle("hidden", isInstalledGame());
+  document.getElementById("btn-next").textContent = world && !canPlayLevel(world.n + 1) ? "DOWNLOAD TO KEEP PLAYING" : "NEXT OBBY";
 }
 
 /* ---------------- Market UI ---------------- */
@@ -1943,7 +1970,10 @@ document.getElementById("btn-complete-levels").onclick = () => { levelsReturn = 
 document.getElementById("btn-levels-back").onclick = () => setState(levelsReturn);
 document.getElementById("btn-pause").onclick = () => setState("menu");
 // continue from whichever obby was just finished (works for replays too)
-document.getElementById("btn-next").onclick = () => { loadLevel(world.n + 1); setState("playing"); };
+document.getElementById("btn-next").onclick = () => playLevel(world.n + 1);
+document.getElementById("btn-trial-replay").onclick = () => playLevel(1);
+document.getElementById("btn-trial-account").onclick = () => setState("account");
+document.getElementById("btn-trial-menu").onclick = () => setState("menu");
 document.getElementById("btn-complete-market").onclick = () => { marketReturn = "complete"; setState("market"); };
 document.getElementById("btn-complete-menu").onclick = () => setState("menu");
 

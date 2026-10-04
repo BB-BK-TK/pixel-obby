@@ -303,3 +303,5 @@
     padding: 8px 14px;
   }
 }
+
+#trial{gap:clamp(6px,1.5dvh,14px);overflow-y:auto}#trial .subtitle{max-width:650px}#trial .cloud-status{max-width:620px;line-height:1.5}#trial .big-btn{flex-shrink:0}@media(max-height:560px){#trial .title{font-size:28px}#trial .subtitle{font-size:14px}#trial .big-btn{font-size:13px;padding:9px 18px;min-height:36px}#trial .cloud-status{font-size:11px;margin:2px 0}}

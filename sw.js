@@ -1,5 +1,5 @@
 "use strict";
-const CACHE = "pixel-obby-v4-play";
+const CACHE = "pixel-obby-v5-trial";
 const ROOT = new URL("./", self.location.href);
 const FILES = ["", "index.html", "play/", "play/index.html", "landing.css", "landing.js", "style.css", "responsive-panels.css", "responsive-scale-v2.css", "game.js", "cloud-sync.js", "analytics.js", "manifest.webmanifest", "icon-192.png", "icon-512.png"];
 const URLS = FILES.map(path => new URL(path, ROOT).href);
