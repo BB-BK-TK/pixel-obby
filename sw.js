@@ -1,45 +1,24 @@
-// Service worker: lets Pixel Obby install as an app and work offline.
 "use strict";
-
-const CACHE = "pixel-obby-v3";
-const FILES = [
-  "./",
-  "./index.html",
-  "./style.css",
-  "./responsive-panels.css",
-  "./responsive-scale-v2.css",
-  "./game.js",
-  "./cloud-sync.js",
-  "./analytics.js",
-  "./manifest.webmanifest",
-  "./icon-192.png",
-  "./icon-512.png",
-];
-
-self.addEventListener("install", (e) => {
-  e.waitUntil(
-    caches.open(CACHE).then((c) => c.addAll(FILES)).then(() => self.skipWaiting())
-  );
-});
-
-self.addEventListener("activate", (e) => {
-  e.waitUntil(
-    caches.keys()
-      .then((keys) => Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k))))
-      .then(() => self.clients.claim())
-  );
-});
-
-// Network first (so updates show up), cache fallback (so it works offline).
-self.addEventListener("fetch", (e) => {
-  if (e.request.method !== "GET") return;
-  e.respondWith(
-    fetch(e.request)
-      .then((res) => {
-        const copy = res.clone();
-        caches.open(CACHE).then((c) => c.put(e.request, copy)).catch(() => {});
-        return res;
-      })
-      .catch(() => caches.match(e.request))
-  );
+const CACHE = "pixel-obby-v4-play";
+const ROOT = new URL("./", self.location.href);
+const FILES = ["", "index.html", "play/", "play/index.html", "landing.css", "landing.js", "style.css", "responsive-panels.css", "responsive-scale-v2.css", "game.js", "cloud-sync.js", "analytics.js", "manifest.webmanifest", "icon-192.png", "icon-512.png"];
+const URLS = FILES.map(path => new URL(path, ROOT).href);
+self.addEventListener("install", event => event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(URLS)).then(() => self.skipWaiting())));
+self.addEventListener("activate", event => event.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(key => key.startsWith("pixel-obby-") && key !== CACHE).map(key => caches.delete(key)))).then(() => self.clients.claim())));
+self.addEventListener("fetch", event => {
+  const url = new URL(event.request.url);
+  // Never cache auth callbacks, API responses, or third-party requests.
+  if (event.request.method !== "GET" || url.search || !URLS.includes(url.href)) return;
+  event.respondWith((async () => {
+    const cache = await caches.open(CACHE);
+    try {
+      const response = await fetch(event.request);
+      if (response.ok && response.type === "basic") await cache.put(event.request, response.clone());
+      return response;
+    } catch (error) {
+      const cached = await cache.match(event.request);
+      if (cached) return cached;
+      throw error;
+    }
+  })());
 });

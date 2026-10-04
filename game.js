@@ -2228,5 +2228,5 @@ window.PixelObbyCloud?.init?.();
 
 // installable app + offline play (only works when served over http, not file://)
 if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
-  navigator.serviceWorker.register("sw.js").catch(() => {});
+  navigator.serviceWorker.register(new URL("../sw.js", document.baseURI)).catch(() => {});
 }

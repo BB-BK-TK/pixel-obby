@@ -236,7 +236,7 @@
       return;
     }
     message("Sending sign-in link…");
-    const redirectTo = location.href.split("#")[0].split("?")[0];
+    const redirectTo = new URL("../", document.baseURI).href;
     const { error } = await client.auth.signInWithOtp({
       email,
       options: { emailRedirectTo: redirectTo },
