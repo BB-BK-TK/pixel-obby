@@ -12,7 +12,7 @@ if (["code", "access_token", "error", "error_description"].some(key => query.has
 }
 
 // Set this to the supplied Google Play HTTPS deep link when the listing is ready.
-const GOOGLE_PLAY_URL = "";
+const GOOGLE_PLAY_URL = "https://play.google.com/store/apps/details?id=com.bbkbtk.pixelobby";
 let installPrompt = null;
 window.addEventListener("beforeinstallprompt", event => {
   event.preventDefault();
